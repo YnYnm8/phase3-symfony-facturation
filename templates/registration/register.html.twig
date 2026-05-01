@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register
+{% endblock %}
+
+{% block body %}
+
+	<div class=" min-h-screen bg-[#F9FAFB] justify-center items-center　gap-5 p-7">
+		  <div class="bg-white rounded-2xl shadow-sm p-10 w-full max-w-lg">
+
+			<i class='flex flex-col text-[#155DFC] items-center ' data-lucide="receipt"></i>
+			<h1>Créez votre compte</h1>
+			<p class='text-[#4A5565]'>Ou</p>
+            <a href="" class='text-[#155DFC]'>connectez-vous à votre compte</a>
+			
+		</div>
+		<div class="flex flex-col">
+			{{ form_errors(registrationForm) }}
+
+			{{ form_start(registrationForm) }}
+
+			{{form_row(registrationForm.first_name)}}
+			{{form_row(registrationForm.last_name)}}
+			{{form_row(registrationForm.company_name)}}
+			{{form_row(registrationForm.iban)}}
+
+			{{ form_row(registrationForm.email) }}
+			{{ form_row(registrationForm.password, {
+            label: 'Password'
+        }) }}
+
+
+			<a href="" class='text-[#155DFC]'>connectez-vous à votre compte</a>
+			<button type="submit" class="hover bg-[#155DFC] rounded text-white">Créer mon compt</button>
+			{{ form_end(registrationForm) }}
+		</div>
+	</div>
+	 <script>lucide.createIcons();</script>
+{% endblock %}
