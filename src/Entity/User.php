@@ -51,6 +51,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $siret = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $cgv = null;
+
     /**
      * @var Collection<int, Client>
      */
@@ -201,6 +204,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->siret = $siret;
 
+        return $this;
+    }
+
+    public function getCgv(): ?string
+    {
+        return $this->cgv;
+    }
+
+    public function setCgv(?string $cgv): static
+    {
+        $this->cgv = $cgv;
         return $this;
     }
 
