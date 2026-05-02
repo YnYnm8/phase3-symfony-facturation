@@ -27,6 +27,10 @@ class Product
     #[ORM\Column(enumType: ProductUnit::class)]
     private ?ProductUnit $unit = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $owner = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -76,6 +80,18 @@ class Product
     public function setUnit(ProductUnit $unit): static
     {
         $this->unit = $unit;
+
+        return $this;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): static
+    {
+        $this->owner = $owner;
 
         return $this;
     }
