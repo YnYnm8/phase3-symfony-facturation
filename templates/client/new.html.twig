@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Client
+{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-gray100 flex items-center justify-center">
+		<div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+			<h1>AJOUTER UN NOUVEAU CLIENT</h1>
+			{# Close button #}
+			<a href="{{ path('app_client_index') }}" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl leading-none">✕</a>
+			<h2>Nouveau client</h2>
+
+			{# {{ include('client/_form.html.twig') }} #}
+			{{ form_start(form, {'attr': {'class': 'flex flex-col gap-4'}}) }}
+
+			<div>
+				{{ form_label(form.name, null, {'label_attr': {'class': 'block text-sm text-gray-600 mb-1'}}) }}
+				{{ form_widget(form.name, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'}}) }}
+				{{ form_errors(form.name) }}
+			</div>
+			{# email #}
+			{#email + telephone côte à côte #}
+			<div class="flex gap-4">
+
+				<div class="flex-1">
+					{{ form_label(form.email,null, {'label_attr': {'class': 'block text-sm text-gray-600 mb-1'}}) }}
+					{{ form_widget(form.email, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'}}) }}
+					{{ form_errors(form.email) }}
+				</div>
+
+
+				<div class="flex-1">
+					{{ form_label(form.phone, null, {'label_attr': {'class': 'block text-sm text-gray-600 mb-1'}}) }}
+					{{ form_widget(form.phone, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'}}) }}
+					{{ form_errors(form.phone) }}
+				</div>
+			</div>
+			<div>
+				{{ form_label(form.adress, null, {'label_attr': {'class': 'block text-sm text-gray-600 mb-1'}}) }}
+				{{ form_widget(form.adress, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'}}) }}
+				{{ form_errors(form.adress) }}
+			</div>
+			{#SIRET + RIB côte à côte #}
+			<div class="flex gap-4">
+
+				<div class="flex-1">
+					{{ form_label(form.siret,null, {'label_attr': {'class': 'block text-sm text-gray-600 mb-1'}}) }}
+					{{ form_widget(form.siret, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'}}) }}
+					{{ form_errors(form.siret) }}
+				</div>
+
+
+				<div class="flex-1">
+					{{ form_label(form.rib, null, {'label_attr': {'class': 'block text-sm text-gray-600 mb-1'}}) }}
+					{{ form_widget(form.rib, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'}}) }}
+					{{ form_errors(form.rib) }}
+				</div>
+
+			</div>
+
+
+			<div class="flex justify-end gap-3 mt-2">
+				<a href="{{ path('app_client_index') }}" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+					Annuler
+				</a>
+				<button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+					Enregistrer
+				</button>
+			</div>
+			{{ form_end(form) }}
+
+		</div>
+	</div>
+{% endblock %}
