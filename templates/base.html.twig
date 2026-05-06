@@ -23,17 +23,16 @@
 	</head>
 	<body>
 		 <script src="https://unpkg.com/lucide@latest"></script>
-		{# ログイン済みのときだけNavbarを表示 #}
 
-			<div
-			class="flex h-screen bg-gray-50"> {# Navbarはここだけ #}
+		<div class="flex h-screen bg-gray-50">
+			{# Navbarはここだけ #}
+			{# ログイン済みのときだけNavbarを表示 #}
 			{% if app.user %}
-				{{ component('NavBar') }}
+			{{ component('NavBar') }}
 			{% endif %}
 
 			{# 各ページのコンテンツ #}
-			<main class="flex-1 overflow-y-auto p-8"> {% block body %}{% endblock %}
-				</main>
+				<main class="flex-1 overflow-y-auto p-8">{% block body %}{% endblock %} </main>
 
 			</div>
 		</body>
