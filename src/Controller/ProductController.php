@@ -23,7 +23,7 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/new', name: 'app_product_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(ProductRepository $productRepository, Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
         $product = new Product();
@@ -36,11 +36,13 @@ final class ProductController extends AbstractController
             $entityManager->flush();
 
             return $this->redirectToRoute('app_product_index', [], Response::HTTP_SEE_OTHER);
+            
         }
 
         return $this->render('product/new.html.twig', [
             'product' => $product,
             'form' => $form,
+            'products' => $productRepository->findAll(),
         ]);
     }
 

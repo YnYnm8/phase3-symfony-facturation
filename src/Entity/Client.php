@@ -27,10 +27,10 @@ class Client
     #[ORM\Column(length: 255)]
     private ?string $adress = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255,nullable:true)]
     private ?string $siret = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255,nullable:true)]
     private ?string $rib = null;
 
     #[ORM\ManyToOne(inversedBy: 'clients')]

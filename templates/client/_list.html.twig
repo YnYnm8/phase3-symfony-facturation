@@ -1,0 +1,60 @@
+<div class="min-h-screen bg-gray-50 font-sans p-8">
+
+		<div class="flex items-center justify-between mb-6">
+			<h1 class="text-xl font-bold text-gray-800">Client</h1>
+			<a href="{{ path('app_client_new') }}" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+				<i data-lucide="plus" class="w-4 h-4"></i>
+				Ajouter un client
+			</a>
+		</div>
+		{# Table #}
+		<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+			<table class="w-full text-sm">
+				<thead>
+					<tr class="border-b border-gray-200">
+						<th>Id</th>
+						<th>Name</th>
+						<th>Email</th>
+						<th>Phone</th>
+						<th>Adress</th>
+						<th>Siret</th>
+						<th>Rib</th>
+						<th>actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for client in clients %}
+						<tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+							<td>{{ client.id }}</td>
+							<td>{{ client.name }}</td>
+							<td>{{ client.email }}</td>
+							<td>{{ client.phone }}</td>
+							<td>{{ client.adress }}</td>
+							<td>{{ client.siret }}</td>
+							<td>{{ client.rib }}</td>
+							<td class="px-6 py-4">
+								<div class="flex items-center justify-end gap-3">
+									<a href="{{ path('app_client_edit', {'id': client.id}) }}">
+										<i data-lucide="pen" class="w-4 h-4"></i>
+									</a>
+									<form method="post" action="{{ path('app_client_delete', {'id': client.id}) }}" onsubmit="return confirm('Supprimer ce produit ?')">
+										<input type="hidden" name="_method" value="DELETE">
+										<input type="hidden" name="_token" value="{{ csrf_token('delete' ~ client.id) }}">
+										<button type="submit" class="text-red-400 hover:text-red-600 transition-colors">
+											<i data-lucide="trash-2" class="w-4 h-4"></i>
+										</button>
+									</form>
+								</div>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="8">no records found</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+ <script>lucide.createIcons();</script>
