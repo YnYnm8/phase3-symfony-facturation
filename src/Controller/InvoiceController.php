@@ -20,15 +20,27 @@ use App\Entity\InvoiceItem;
 final class InvoiceController extends AbstractController
 {
     #[Route(name: 'app_invoice_index', methods: ['GET'])]
-    public function index(InvoiceRepository $invoiceRepository): Response
+    public function index(Request $request, InvoiceRepository $invoiceRepository): Response
     {
+        // Request = フロントからの情報を受け取る道具
+        $status = $request->query->get('status');
+
+        if ($status) {
+            $invoices = $invoiceRepository->findBy(['status' => $status]);
+        } else {
+            $invoices = $invoiceRepository->findAll();
+        }
+
+
+
         return $this->render('invoice/index.html.twig', [
-            'invoices' => $invoiceRepository->findAll(),
+            'invoices' => $invoices,
+            'currentStatus'=>$status,
         ]);
     }
 
     #[Route('/new', name: 'app_invoice_new', methods: ['GET', 'POST'])]
-    public function new(ProductRepository $productRepository, Request $request, EntityManagerInterface $entityManager ,InvoiceRepository $invoiceRepository): Response
+    public function new(ProductRepository $productRepository, Request $request, EntityManagerInterface $entityManager, InvoiceRepository $invoiceRepository): Response
     {
 
         $invoice = new Invoice();
@@ -42,7 +54,7 @@ final class InvoiceController extends AbstractController
             $invoice->setStatus(InvoiceStatus::DRAFT);
             // 作成日を設定
             $invoice->setCreatedAt(new \DateTime());
-            
+
             // 番号を自動生成（後で実装）
             $now = new \DateTime();
             $count = $invoiceRepository->countByMonth($now);
