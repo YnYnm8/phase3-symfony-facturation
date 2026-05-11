@@ -1,41 +1,129 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}Invoice index{% endblock %}
 
 {% block body %}
-    <h1>Invoice index</h1>
+<div class="p-8">
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Number</th>
-                <th>Total_ttc</th>
-                <th>Created_at</th>
-                <th>Status</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for invoice in invoices %}
-            <tr>
-                <td>{{ invoice.id }}</td>
-                <td>{{ invoice.number }}</td>
-                <td>{{ invoice.totalTtc }}</td>
-                <td>{{ invoice.createdAt ? invoice.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ invoice.status.value }}</td>
-                <td>
-                    <a href="{{ path('app_invoice_show', {'id': invoice.id}) }}">show</a>
-                    <a href="{{ path('app_invoice_edit', {'id': invoice.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="6">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    {# ヘッダー：タイトルと「Créer une facture」ボタン #}
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Factures</h1>
+        <a href="{{ path('app_invoice_new') }}"
+           class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+            + Créer une facture
+        </a>
+    </div>
 
-    <a href="{{ path('app_invoice_new') }}">Create new</a>
+    {# タブ：statusでフィルター #}
+    {# currentStatus = Controllerから渡される現在選択中のstatus #}
+    {# 三項演算子：条件 ? 真の場合 : 偽の場合 #}
+    <div class="flex gap-2 mb-6">
+
+        {# 「Toutes」：全部表示 #}
+        <a href="{{ path('app_invoice_index') }}"
+           class="{{ currentStatus is null ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100' }} px-4 py-2 rounded-lg text-sm">
+            Toutes
+        </a>
+
+        {# 「Brouillons」：status=draftでフィルター #}
+        <a href="{{ path('app_invoice_index', {'status': 'draft'}) }}"
+           class="{{ currentStatus == 'draft' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100' }} px-4 py-2 rounded-lg text-sm">
+            Brouillons
+        </a>
+
+        {# 「En attente」：status=pending_paymentでフィルター #}
+        <a href="{{ path('app_invoice_index', {'status': 'pending_payment'}) }}"
+           class="{{ currentStatus == 'pending_payment' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100' }} px-4 py-2 rounded-lg text-sm">
+            En attente
+        </a>
+
+        {# 「Payées」：status=paidでフィルター #}
+        <a href="{{ path('app_invoice_index', {'status': 'paid'}) }}"
+           class="{{ currentStatus == 'paid' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-100' }} px-4 py-2 rounded-lg text-sm">
+            Payées
+        </a>
+
+    </div>
+
+    {# 請求書一覧テーブル #}
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left px-6 py-3 text-gray-500 font-medium">Numéro</th>
+                    <th class="text-left px-6 py-3 text-gray-500 font-medium">Date</th>
+                    <th class="text-left px-6 py-3 text-gray-500 font-medium">Client</th>
+                    <th class="text-left px-6 py-3 text-gray-500 font-medium">Total TTC</th>
+                    <th class="text-left px-6 py-3 text-gray-500 font-medium">Statut</th>
+                    <th class="text-right px-6 py-3 text-gray-500 font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+
+                    {# 請求書番号 #}
+                    <td class="px-6 py-4 text-gray-800 font-medium">{{ invoice.number }}</td>
+
+                    {# 作成日 #}
+                    <td class="px-6 py-4 text-gray-500">
+                        {{ invoice.createdAt ? invoice.createdAt|date('d/m/Y') : '' }}
+                    </td>
+
+                    {# Client名 #}
+                    <td class="px-6 py-4 text-gray-800">{{ invoice.client.name }}</td>
+
+                    {# 合計金額 #}
+                    <td class="px-6 py-4 text-gray-800">{{ invoice.totalTtc }} €</td>
+
+                    {# statusバッジ：statusによって色が変わる #}
+                    <td class="px-6 py-4">
+                        {% if invoice.status.value == 'draft' %}
+                            {# Brouillon → グレー #}
+                            <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                                Brouillon
+                            </span>
+                        {% elseif invoice.status.value == 'pending_payment' %}
+                            {# En attente → オレンジ #}
+                            <span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-600">
+                                En attente
+                            </span>
+                        {% elseif invoice.status.value == 'paid' %}
+                            {# Payée → グリーン #}
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-600">
+                                Payée
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    {# アクション：編集・詳細ボタン #}
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-end gap-3">
+                            {# 編集ボタン #}
+                            <a href="{{ path('app_invoice_new', {'id': invoice.id}) }}"
+                               class="text-blue-500 hover:text-blue-700 transition-colors">
+                                <i data-lucide="pen" class="w-4 h-4"></i>
+                            </a>
+                            {# 詳細ボタン #}
+                            <a href="{{ path('app_invoice_show', {'id': invoice.id}) }}"
+                               class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Détails
+                            </a>
+                        </div>
+                    </td>
+
+                </tr>
+                {% else %}
+                {# 請求書がない場合 #}
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                        Aucune facture trouvée
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<script>lucide.createIcons();</script>
 {% endblock %}
