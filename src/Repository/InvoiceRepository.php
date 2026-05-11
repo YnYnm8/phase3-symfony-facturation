@@ -15,7 +15,19 @@ class InvoiceRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Invoice::class);
     }
+// src/Repository/InvoiceRepository.php
 
+public function countByMonth(\DateTime $date): int
+{
+    return $this->createQueryBuilder('i')
+        ->select('COUNT(i.id)')
+        ->where('i.created_at >= :start')
+        ->andWhere('i.created_at <= :end')
+        ->setParameter('start', new \DateTime($date->format('Y-m-01 00:00:00')))
+        ->setParameter('end', new \DateTime($date->format('Y-m-t 23:59:59')))
+        ->getQuery()
+        ->getSingleScalarResult();
+}
 //    /**
 //     * @return Invoice[] Returns an array of Invoice objects
 //     */

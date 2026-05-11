@@ -1,0 +1,264 @@
+{% extends 'base.html.twig' %}
+{% block title %}Créer une facture{% endblock %}
+
+{% block body %}
+{# ページ全体のコンテナ：左に余白・最大幅を制限 #}
+<div class="p-8 max-w-4xl">
+
+    {# 戻るリンク #}
+    <a href="{{ path('app_invoice_index') }}"
+       class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4">
+        ← Retour aux factures
+    </a>
+
+    {# ページタイトル #}
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Créer une facture</h1>
+
+    {# フォーム開始 #}
+    {{ form_start(form) }}
+
+    {# ===== Informations Générales ===== #}
+    {# 白いカード：Clientと日付を横並びで表示 #}
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+        <h2 class="font-semibold text-gray-800 mb-4">Informations Générales</h2>
+
+        {# ClientとDateを横並びに #}
+        <div class="flex gap-4">
+
+            {# Client選択 #}
+            <div class="flex-1">
+                {{ form_label(form.client, null, {'label_attr': {'class': 'block text-sm text-gray-600 mb-1'}}) }}
+                <div class="flex gap-2">
+                    {# ドロップダウンで既存のClientを選ぶ #}
+                    {{ form_widget(form.client, {'attr': {'class': 'flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'}}) }}
+                    {# 新しいClientを作るリンク #}
+                    <a href="{{ path('app_client_new') }}"
+                       class="px-3 py-2 border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50">+</a>
+                </div>
+                {{ form_errors(form.client) }}
+            </div>
+
+            {# 日付（読み取り専用：Controllerで自動設定） #}
+            <div class="flex-1">
+                <label class="block text-sm text-gray-600 mb-1">Date de la facture</label>
+                {# 今日の日付を表示・編集不可 #}
+                <input type="text"
+                       value="{{ 'now'|date('d/m/Y') }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                       readonly>
+            </div>
+
+        </div>
+    </div>
+
+    {# ===== Lignes de la facture ===== #}
+    {# 白いカード：商品行のテーブルと追加フォーム #}
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+        <h2 class="font-semibold text-gray-800 mb-4">Lignes de la facture</h2>
+
+        {# 商品行のテーブル：JavaScriptで動的に追加される #}
+        <table class="w-full text-sm mb-4">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-2 text-gray-500 font-medium">Produit / Service</th>
+                    <th class="text-center py-2 text-gray-500 font-medium">Qté</th>
+                    <th class="text-right py-2 text-gray-500 font-medium">Prix Unitaire</th>
+                    <th class="text-right py-2 text-gray-500 font-medium">Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            {# JavaScriptのrenderLines()がここに行を追加する #}
+            <tbody id="invoice-lines"></tbody>
+        </table>
+
+        {# 商品追加フォーム：Productを選んで「+ Ajouter」を押す #}
+        <div class="flex gap-3 items-end border-t border-gray-100 pt-4">
+
+            {# Product選択ドロップダウン #}
+            <div class="flex-1">
+                <label class="block text-xs text-gray-500 mb-1">Sélectionner un produit</label>
+                <select id="select-product"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Choisir --</option>
+                    {# TwigでControllerから渡されたproductsを表示 #}
+                    {# data-price・data-nameはJavaScriptで使う #}
+                    {% for product in products %}
+                    <option value="{{ product.id }}"
+                            data-price="{{ product.price }}"
+                            data-name="{{ product.name }}">
+                        {{ product.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# 数量入力 #}
+            <div class="w-24">
+                <label class="block text-xs text-gray-500 mb-1">Quantité</label>
+                <input type="number" id="input-quantity" value="1" min="1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            </div>
+
+            {# 単価入力（Product選択時に自動入力される） #}
+            <div class="w-32">
+                <label class="block text-xs text-gray-500 mb-1">Prix unitaire (€)</label>
+                <input type="number" id="input-price" step="0.01"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            </div>
+
+            {# 追加ボタン：クリックでaddLine()が実行される #}
+            <button type="button" onclick="addLine()"
+                    class="px-4 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-800">
+                + Ajouter
+            </button>
+
+        </div>
+
+        {# 合計金額：updateTotal()が自動で更新する #}
+        <div class="flex justify-end mt-4 pt-4 border-t border-gray-100">
+            <span class="font-semibold text-gray-700 mr-4">Total Facture (TTC) :</span>
+            <span id="total" class="font-bold text-blue-600 text-lg">0.00 €</span>
+        </div>
+
+    </div>
+
+    {# Controllerに送るhidden inputs：JavaScriptのrenderLines()が自動で追加する #}
+    <div id="hidden-inputs"></div>
+
+    {# ===== ボタン ===== #}
+    <div class="flex justify-center gap-4">
+
+        {# キャンセル：一覧ページに戻る #}
+        <a href="{{ path('app_invoice_index') }}"
+           class="px-6 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+            Annuler
+        </a>
+
+        {# 下書き保存：action=draftをControllerに送る #}
+        <button type="submit" name="action" value="draft"
+                class="px-6 py-2 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50">
+            Enregistrer en brouillon
+        </button>
+
+        {# 確定保存：action=validateをControllerに送る #}
+        <button type="submit" name="action" value="validate"
+                class="px-6 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+            Enregistrer et valider
+        </button>
+
+    </div>
+
+    {# フォーム終了 #}
+    {{ form_end(form) }}
+
+</div>
+
+<script>
+    let lines = []; // 追加した行のリスト（最初は空）
+    let lineIndex = 0; // 各行に番号をつけるためのカウンター
+
+    // select-productの値が変わったとき価格を自動入力
+    document.getElementById('select-product').addEventListener('change', function() {
+        // 選んだoptionを取得
+        // this.options = 全部のoption
+        // selectedIndex = 選んだoptionの番号
+        const option = this.options[this.selectedIndex];
+        // input-priceに価格を自動入力
+        document.getElementById('input-price').value = option.dataset.price || '';
+    });
+
+    // データを配列に追加する
+    function addLine() {
+        // 各フィールドの値を取得
+        const select = document.getElementById('select-product');
+        const quantity = document.getElementById('input-quantity').value;
+        const price = document.getElementById('input-price').value;
+        // 選んだoptionを取得
+        const option = select.options[select.selectedIndex];
+
+        // 何も選んでいない場合は止める
+        if (!select.value) {
+            alert('Veuillez sélectionner un produit.');
+            return;
+        }
+
+        // 行のデータを作る
+        const line = {
+            index: lineIndex,            // 行の番号
+            productId: select.value,     // 商品のID
+            name: option.dataset.name,   // 商品名
+            quantity: parseInt(quantity), // 数量
+            price: parseFloat(price),    // 単価
+            total: parseInt(quantity) * parseFloat(price) // 合計
+        };
+
+        // 配列に追加
+        lines.push(line);
+        // 行番号を増やす
+        lineIndex++;
+        // テーブルを更新
+        renderLines();
+        // 合計金額を更新
+        updateTotal();
+    }
+
+    // 何かが変わるたびに呼ばれる共通の関数
+    // linesの配列を使ってテーブルとhidden inputsを更新する
+    function renderLines() {
+        // invoice-lines（tbody）を取得
+        const tbody = document.getElementById('invoice-lines');
+        // hidden inputsを入れるdivを取得
+        const hiddenInputs = document.getElementById('hidden-inputs');
+
+        // 一旦全部空にする
+        tbody.innerHTML = '';
+        hiddenInputs.innerHTML = '';
+
+        // linesの配列を1行ずつ処理
+        lines.forEach(function(line, i) {
+
+            // テーブルに行を追加（見た目）
+            tbody.innerHTML += `
+                <tr class="border-b border-gray-100">
+                    <td class="py-3 text-gray-800">${line.name}</td>
+                    <td class="py-3 text-center text-gray-600">${line.quantity}</td>
+                    <td class="py-3 text-right text-gray-600">${line.price.toFixed(2)} €</td>
+                    <td class="py-3 text-right text-gray-800">${line.total.toFixed(2)} €</td>
+                    <td class="py-3 text-right">
+                        <button type="button" onclick="removeLine(${line.index})"
+                                class="text-red-400 hover:text-red-600">🗑️</button>
+                    </td>
+                </tr>
+            `;
+
+            // Controllerに送るhidden inputsを追加（データ送信用）
+            hiddenInputs.innerHTML += `
+                <input type="hidden" name="lines[${i}][productId]" value="${line.productId}">
+                <input type="hidden" name="lines[${i}][quantity]" value="${line.quantity}">
+                <input type="hidden" name="lines[${i}][unitPrice]" value="${line.price}">
+            `;
+        });
+    }
+
+    // linesの全行の合計を計算してspanを更新する
+    function updateTotal() {
+        // 全行のtotalを足し算する
+        const total = lines.reduce(function(sum, line) {
+            return sum + line.total;
+        }, 0);
+        // totalというIDのspanを更新
+        document.getElementById('total').textContent = total.toFixed(2) + ' €';
+    }
+
+    // 行を削除する
+    function removeLine(index) {
+        // indexが一致しない行だけ残す
+        lines = lines.filter(function(line) {
+            return line.index !== index;
+        });
+        // 画面を更新
+        renderLines();
+        updateTotal();
+    }
+</script>
+{% endblock %}
