@@ -20,6 +20,7 @@
 		 <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
 			 <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
 		{% endif %}
+		<meta name="turbo-visit-control" content="reload">
 	</head>
 	<body>
 		 <script src="https://unpkg.com/lucide@latest"></script>
@@ -27,7 +28,7 @@
 		<div class="flex h-screen bg-gray-50">
 			{# Navbarはここだけ #}
 			{# ログイン済みのときだけNavbarを表示 #}
-			{% if app.user %}
+				{% if app.user %}
 			{{ component('NavBar') }}
 			{% endif %}
 
