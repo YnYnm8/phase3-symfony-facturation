@@ -13,8 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Enum\InvoiceStatus;
 use App\Repository\ProductRepository;
 use App\Entity\InvoiceItem;
-
-
+use Sensiolabs\GotenbergBundle\GotenbergPdfInterface;
 
 #[Route('/invoice')]
 final class InvoiceController extends AbstractController
@@ -35,7 +34,7 @@ final class InvoiceController extends AbstractController
 
         return $this->render('invoice/index.html.twig', [
             'invoices' => $invoices,
-            'currentStatus'=>$status,
+            'currentStatus' => $status,
         ]);
     }
 
@@ -138,5 +137,21 @@ final class InvoiceController extends AbstractController
         }
 
         return $this->redirectToRoute('app_invoice_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/pdf', name: 'app_invoice_pdf', methods: ['GET'])]
+    public function pdf(Invoice $invoice, GotenbergPdfInterface $gotenberg): Response
+    {
+        if ($invoice->getStatus() === InvoiceStatus::DRAFT) {
+            $this->addFlash('error', 'Seule une facture validée peut être transformée en PDF.');
+            return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
+        }
+
+        return $gotenberg->html()
+            ->content('invoice/pdf.html.twig', [
+                'invoice' => $invoice,
+            ])
+            ->generate()
+            ->stream();
     }
 }
