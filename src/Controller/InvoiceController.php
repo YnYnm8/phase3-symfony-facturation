@@ -35,6 +35,7 @@ final class InvoiceController extends AbstractController
         return $this->render('invoice/index.html.twig', [
             'invoices' => $invoices,
             'currentStatus' => $status,
+
         ]);
     }
 
@@ -61,6 +62,7 @@ final class InvoiceController extends AbstractController
 
             // ボタンの種類を確認（draft or validate）
             $action = $request->request->get('action');
+
             // statusを設定 
             if ($action === 'validate') {
                 $invoice->setStatus(InvoiceStatus::PENDING_PAYMENT);
@@ -99,26 +101,90 @@ final class InvoiceController extends AbstractController
     #[Route('/{id}', name: 'app_invoice_show', methods: ['GET'])]
     public function show(Invoice $invoice): Response
     {
+
+        return $this->render('invoice/show.html.twig', [
+            'invoice' => $invoice,
+        ]);
+    }
+    #[Route('/{id}/validate', name: 'app_invoice_validate', methods: ['POST'])]
+    public function validate(Invoice $invoice, Request $request, EntityManagerInterface $em): Response
+    {
+
+
+        // DRAFTの状態だったらPENDING_PAYMENTに変更する
+        if ($invoice->getStatus() === InvoiceStatus::DRAFT) {
+            $invoice->setStatus(InvoiceStatus::PENDING_PAYMENT);
+            $em->flush();
+        }
+        return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
+
         return $this->render('invoice/show.html.twig', [
             'invoice' => $invoice,
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_invoice_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Invoice $invoice, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}/pay', name: 'app_invoice_pay', methods: ['POST'])]
+    public function pay(Invoice $invoice, Request $request, EntityManagerInterface $em): Response
     {
+
+
+        // PENDING_PAYMENTの状態だったらPAIDに変更する
+        if ($invoice->getStatus() === InvoiceStatus::PENDING_PAYMENT) {
+            $invoice->setStatus(InvoiceStatus::PAID);
+            $em->flush();
+        }
+        return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
+    }
+
+
+
+
+    #[Route('/{id}/edit', name: 'app_invoice_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Invoice $invoice, EntityManagerInterface $entityManager,ProductRepository $productRepository): Response
+    {
+        // ← 最初にチェック（フォーム作成の前）
+        if ($invoice->getStatus() === InvoiceStatus::PAID) {
+            $this->addFlash('error', 'Une facture payée ne peut plus être modifiée.');
+            return $this->redirectToRoute('app_invoice_show', ['id' => $invoice->getId()]);
+        }
+
         $form = $this->createForm(InvoiceType::class, $invoice);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+    if ($form->isSubmitted() && $form->isValid()) {
 
-            return $this->redirectToRoute('app_invoice_index', [], Response::HTTP_SEE_OTHER);
-        }
+    // ① 既存のInvoiceItemsを全部削除
+    foreach ($invoice->getInvoiceItems() as $item) {
+        $entityManager->remove($item);
+    }
+    $entityManager->flush();
 
-        return $this->render('invoice/edit.html.twig', [
-            'invoice' => $invoice,
-            'form' => $form,
+    // ② 新しいInvoiceItemsを保存
+    $lines = $request->request->all('lines');
+    foreach ($lines as $lineData) {
+        $product = $productRepository->find($lineData['productId']);
+        $item = new InvoiceItem();
+        $item->setProduct($product);
+        $item->setQuantity((int)$lineData['quantity']);
+        $item->setUnitPrice((float)$lineData['unitPrice']);
+        $item->setInvoice($invoice);
+        $entityManager->persist($item);
+    }
+
+    // ③ 合計を再計算
+    $total = array_sum(array_map(function($lineData) {
+        return $lineData['quantity'] * $lineData['unitPrice'];
+    }, $lines));
+    $invoice->setTotalTtc($total);
+
+    $entityManager->flush();
+    return $this->redirectToRoute('app_invoice_index', ['id' => $invoice->getId()]);
+    
+    }
+    return $this->render('invoice/edit.html.twig', [
+        'invoice' => $invoice,
+        'form' => $form,
+        'products' => $productRepository->findAll(),
         ]);
     }
 
