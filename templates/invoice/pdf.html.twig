@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 40px; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .title { font-size: 24px; font-weight: bold; }
+        .client-box { background: #f5f5f5; padding: 15px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { border-bottom: 2px solid black; padding: 8px; text-align: left; }
+        td { padding: 8px; border-bottom: 1px solid #ddd; }
+        .total { text-align: right; margin-top: 20px; font-size: 16px; font-weight: bold; }
+        .footer { margin-top: 40px; font-size: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    {# ヘッダー：自分の会社情報 + FACTURE #}
+    <div class="header">
+        <div>
+            <strong>{{ invoice.owner.companyName }}</strong><br>
+            {{ invoice.owner.firstName }} {{ invoice.owner.lastName }}<br>
+            {{ invoice.owner.email }}
+        </div>
+        <div>
+            <div class="title">FACTURE</div>
+            <div>N° {{ invoice.number }}</div>
+            <div>Date : {{ invoice.createdAt|date('d/m/Y') }}</div>
+        </div>
+    </div>
+
+    {# 宛先 #}
+    <div class="client-box">
+        <strong>FACTURÉ À</strong><br>
+        {{ invoice.client.name }}<br>
+        {{ invoice.client.adress }}<br>
+        {{ invoice.client.email }}<br>
+        {% if invoice.client.siret %}
+            SIRET : {{ invoice.client.siret }}
+        {% endif %}
+    </div>
+
+    {# 商品テーブル #}
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Qté</th>
+                <th>Prix Unitaire</th>
+                <th>Total TTC</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.invoiceItems %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unitPrice }} €</td>
+                <td>{{ item.quantity * item.unitPrice }} €</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {# 合計 #}
+    <div class="total">
+        Total TTC : {{ invoice.totalTtc }} €
+    </div>
+
+    {# フッター：CGV・SIRET・IBAN #}
+    <div class="footer">
+        {% if invoice.owner.siret %}
+            SIRET : {{ invoice.owner.siret }}<br>
+        {% endif %}
+        <strong>Conditions de paiement :</strong><br>
+        IBAN : {{ invoice.owner.iban }}<br>
+        {% if invoice.owner.cgv %}
+            {{ invoice.owner.cgv }}
+        {% endif %}
+    </div>
+
+</body>
+</html>

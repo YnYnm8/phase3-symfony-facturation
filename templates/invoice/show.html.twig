@@ -49,9 +49,15 @@
 						</button>
 					</form>
 				{% endif %}
+				{# EN ATTENTEまたはPAIDのときPDFボタンを表示 #}
+				{% if invoice.status.value != 'draft' %}
+					<a href="{{ path('app_invoice_pdf', {'id': invoice.id}) }}" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+						📄 PDF
+					</a>
+				{% endif %}
 
 			</div>
-			
+
 		</div>
 
 		<p class="text-sm text-gray-500 mb-6">Date :
